@@ -1,138 +1,128 @@
-# Chatbot-with-gmail-func
+NovaSynth Chatbot with RAG and Email Integration
+Welcome to the NovaSynth Chatbot project! This intelligent chatbot is designed to retrieve company information using Retrieval-Augmented Generation (RAG) and send the company profile via email upon request. Built with cutting-edge technologies like FastAPI, Pinecone, and OpenAI, it provides a seamless and efficient interaction experience.
 
-README
-Project: NovaSynth Chatbot with RAG and Email Integration
-This project provides a chatbot interface capable of retrieving company details using Retrieval-Augmented Generation (RAG) and sending the company's profile via email upon user request. The chatbot integrates a FastAPI server, Pinecone for vector storage, OpenAI for LLM responses, and SMTP for email delivery.
-
-1. Setup Instructions
+🚀 Features
+Smart Retrieval: Uses RAG to fetch relevant company details from a knowledge base.
+Email Integration: Sends the company profile as an email attachment upon user request.
+Real-Time Interaction: Communicate via WebSocket for instant responses.
+Scalable & Modular: Designed with independent components for easy maintenance and future enhancements.
+📦 Setup Instructions
 Prerequisites
+Ensure the following tools and accounts are ready:
+
 Python: Version 3.8 or later.
 Pinecone Account: For vector storage of knowledge base documents.
-OpenAI API Key: To use GPT-based models for conversation.
-SMTP Email Account: For sending emails.
-Steps
-Clone Repository:
-
+OpenAI API Key: To leverage GPT-based language models.
+SMTP Email Account: Gmail or similar account for email delivery.
+Steps to Run
+1. Clone the Repository
 bash
 Copy code
 git clone https://github.com/M-A-K-K/Chatbot-with-gmail-func.git
-   cd Chatbot-with-gmail-func
-Install Dependencies: Install required libraries using pip:
-
+cd Chatbot-with-gmail-func
+2. Install Dependencies
 bash
 Copy code
 pip install -r requirements.txt
-Set Up Environment Variables: Create a .env file in the root directory and add:
+3. Configure Environment Variables
+Create a .env file in the root directory with the following:
 
 env
 Copy code
 OPENAI_API_KEY=your_openai_api_key
+PINECONE_API_KEY=your_pinecone_api_key
+PINECONE_ENV=your_pinecone_environment
 SENDER_EMAIL=your_email@example.com
 SENDER_PASSWORD=your_email_password
-Prepare Data:
-
-Add the company's profile or other knowledge base documents in a structured format.
-Store the profile file in the Data/ directory (e.g., Data/company.txt).
-Run the Application:
-
+4. Prepare Data
+Add the company profile or other knowledge base documents in the Data/ directory.
+Example: Save the company profile as Data/company.txt.
+5. Run the Application
 bash
 Copy code
 uvicorn main:app --host 0.0.0.0 --port 8000
-Access the Chatbot:
+6. Access the Chatbot
+WebSocket Endpoint: ws://localhost:8000/chat
+REST Endpoint (for testing): GET http://localhost:8000/
+🛠 Architecture Overview
+Core Components
+FastAPI Server
 
-WebSocket endpoint: ws://localhost:8000/chat
-REST endpoint to verify: GET http://localhost:8000/
-2. Architecture Overview
-Components
-FastAPI Server:
+Handles REST and WebSocket communication.
+Integrates user input processing and response generation.
+Retrieval-Augmented Generation (RAG)
 
-Provides REST and WebSocket interfaces for interaction.
-Handles user inputs and integrates LLM-based responses.
-RAG (Retrieval-Augmented Generation):
+Vector Store (Pinecone): Indexes and retrieves documents.
+LLM (OpenAI GPT): Generates context-aware and relevant responses.
+Email Sending Module
 
-Vector Store (Pinecone): Indexes company documents for retrieval.
-LLM (OpenAI GPT): Generates responses based on retrieved documents and chat history.
-Email Sender:
+Uses Python's smtplib for email functionality.
+Sends company profiles as email attachments.
+Middleware
 
-Uses Python's smtplib to send emails with attachments.
-Middleware:
-
-CORS Middleware enables communication from any origin.
+CORS Middleware: Enables cross-origin requests.
 Workflow
-User Interaction:
-User queries are received through a WebSocket.
-Processing:
-If the query includes an email request, the chatbot sends the requested profile.
-If no email is provided, the chatbot prompts the user for one.
-Response Generation:
-RAG retrieves relevant documents and generates responses using GPT.
-Email Delivery:
-Company profiles are sent as email attachments if requested.
+User Interaction
+Receives input via WebSocket.
+Processing
+Checks for email requests and retrieves relevant documents.
+Prompts users for email if not provided.
+Response Generation
+Uses RAG to fetch relevant details and generate a GPT-based response.
+Email Delivery
+Sends company profiles as attachments if requested.
+📌 Key Design Decisions
+RAG Implementation
 
+Focused Retrieval: Ensures concise responses by retrieving contextually relevant knowledge.
+Chat Continuity: Maintains chat history for better contextual responses.
+Email Workflow
 
-3. Key Design Decisions
+Proactive Requests: Explicitly prompts users for an email if missing.
+Validation: Ensures file attachment exists before sending.
+Modular Components
 
+Email sending and RAG processes are designed independently for better scalability.
+⚠ Known Limitations
+Basic Email Validation
 
-RAG Implementation:
+Uses regex for validation; unreachable or invalid emails are not flagged.
+Limited Scalability
 
-Document Retrieval: Ensures relevant and concise responses by focusing on stored company knowledge.
+Chat history is stored in memory during a session; persistent storage like a database is needed for scaling.
+Single File Support
 
-Context-Aware Chat: Maintains chat history to align future responses with past interactions.
+Currently supports a single profile file for email attachment.
+Error Handling
 
-Email Workflow:
+Limited handling of runtime issues (e.g., email server or vector store outages).
+🌟 Future Improvements
+Enhanced Email Validation
 
-Proactive Email Request: If an email is missing, the system explicitly asks for it.
+Add mechanisms to verify email validity and deliverability.
+Persistent Chat History
 
-Attachment Validation: Ensures the profile file exists before sending.
+Use a database to store and analyze user interactions.
+Improved RAG
 
-Modular Design:
+Expand to support multi-document indexing and hierarchical retrieval.
+User Authentication
 
-Tools like email and RAG components are designed as independent modules for easy maintenance.
+Add login and authentication for secure and personalized responses.
+User-Friendly Interface
 
-5. Known Limitations
+Build a front-end for better interaction.
+Asynchronous Email Handling
 
-Email Validation:
+Implement background email-sending for improved responsiveness.
+📖 About Retrieval-Augmented Generation (RAG)
+RAG enhances chatbot responses by combining document retrieval with generative AI, ensuring contextually relevant and accurate information.
 
+How It Works
+Document Embedding: Knowledge base files are converted to vector embeddings using OpenAI models.
+Vector Store: Embeddings are stored in Pinecone for similarity search.
+Query Matching: User input is matched against stored vectors to retrieve top documents.
+Response Generation: GPT generates a cohesive response using the retrieved context.
+💡 Get Started Today!
+Clone the repository, follow the setup instructions, and experience the power of intelligent, RAG-enabled chat with email integration.
 
-Only basic email validation using regex is implemented; invalid or unreachable emails won't be caught.
-
-Limited Scalability:
-
-
-Chat history is stored in memory during the session. Persistent storage (e.g., a database) is needed for scalability.
-
-Single Profile File:
-
-
-The system currently supports sending a single profile file. Multi-document support can be added.
-
-Error Handling:
-
-Some runtime errors (e.g., email server failure, vector store unavailability) are not fully handled.
-
-5. Future Improvements
-
-Advanced Email Validation:
-
-
-Add verification mechanisms to check if an email is valid and reachable.
-
-Persistent Chat History:
-
-Store chat history in a database for better tracking and analytics.
-
-Enhanced RAG:
-
-Expand the knowledge base with multi-document indexing and hierarchical retrieval strategies.
-
-User Authentication:
-
-Add user authentication to enhance security and customize responses.
-
-Improved UI:
-
-Build a front-end interface for better interaction and usability.
-
-Asynchronous Email Handling:
-
-Allow email sending in the background to improve responsiveness.
