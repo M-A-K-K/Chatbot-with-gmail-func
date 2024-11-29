@@ -68,44 +68,71 @@ Response Generation:
 RAG retrieves relevant documents and generates responses using GPT.
 Email Delivery:
 Company profiles are sent as email attachments if requested.
+
+
 3. Key Design Decisions
+
+
 RAG Implementation:
+
 Document Retrieval: Ensures relevant and concise responses by focusing on stored company knowledge.
+
 Context-Aware Chat: Maintains chat history to align future responses with past interactions.
+
 Email Workflow:
+
 Proactive Email Request: If an email is missing, the system explicitly asks for it.
+
 Attachment Validation: Ensures the profile file exists before sending.
+
 Modular Design:
+
 Tools like email and RAG components are designed as independent modules for easy maintenance.
-4. Known Limitations
+
+5. Known Limitations
+
 Email Validation:
 
+
 Only basic email validation using regex is implemented; invalid or unreachable emails won't be caught.
+
 Limited Scalability:
 
+
 Chat history is stored in memory during the session. Persistent storage (e.g., a database) is needed for scalability.
+
 Single Profile File:
 
+
 The system currently supports sending a single profile file. Multi-document support can be added.
+
 Error Handling:
 
 Some runtime errors (e.g., email server failure, vector store unavailability) are not fully handled.
+
 5. Future Improvements
+
 Advanced Email Validation:
 
+
 Add verification mechanisms to check if an email is valid and reachable.
+
 Persistent Chat History:
 
 Store chat history in a database for better tracking and analytics.
+
 Enhanced RAG:
 
 Expand the knowledge base with multi-document indexing and hierarchical retrieval strategies.
+
 User Authentication:
 
 Add user authentication to enhance security and customize responses.
+
 Improved UI:
 
 Build a front-end interface for better interaction and usability.
+
 Asynchronous Email Handling:
 
 Allow email sending in the background to improve responsiveness.
