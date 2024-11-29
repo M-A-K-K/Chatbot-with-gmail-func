@@ -15,8 +15,8 @@ Clone Repository:
 
 bash
 Copy code
-git clone https://github.com/your-repository.git
-cd your-repository
+git clone https://github.com/M-A-K-K/Chatbot-with-gmail-func.git
+   cd Chatbot-with-gmail-func
 Install Dependencies: Install required libraries using pip:
 
 bash
