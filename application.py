@@ -226,7 +226,12 @@ async def websocket_chat(websocket: WebSocket):
     except WebSocketDisconnect:
         print("Client disconnected")
         session_id = str(uuid.uuid4())
-        with open(f"chat_history_{session_id}.json", "w") as history_file:
+        history_folder = "history"
+
+        if not os.path.exists(history_folder):
+            os.makedirs(history_folder)
+
+        with open(f"{history_folder}/chat_history_{session_id}.json", "w") as history_file:
             import json
             json.dump(chat_history, history_file, indent=4)
 
