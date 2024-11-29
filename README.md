@@ -1,128 +1,162 @@
-NovaSynth Chatbot with RAG and Email Integration
-Welcome to the NovaSynth Chatbot project! This intelligent chatbot is designed to retrieve company information using Retrieval-Augmented Generation (RAG) and send the company profile via email upon request. Built with cutting-edge technologies like FastAPI, Pinecone, and OpenAI, it provides a seamless and efficient interaction experience.
 
-🚀 Features
-Smart Retrieval: Uses RAG to fetch relevant company details from a knowledge base.
-Email Integration: Sends the company profile as an email attachment upon user request.
-Real-Time Interaction: Communicate via WebSocket for instant responses.
-Scalable & Modular: Designed with independent components for easy maintenance and future enhancements.
-📦 Setup Instructions
-Prerequisites
-Ensure the following tools and accounts are ready:
+# **🌐 NovaSynth Chatbot with RAG and Email Integration**
 
-Python: Version 3.8 or later.
-Pinecone Account: For vector storage of knowledge base documents.
-OpenAI API Key: To leverage GPT-based language models.
-SMTP Email Account: Gmail or similar account for email delivery.
-Steps to Run
-1. Clone the Repository
-bash
-Copy code
-git clone https://github.com/M-A-K-K/Chatbot-with-gmail-func.git
-cd Chatbot-with-gmail-func
-2. Install Dependencies
-bash
-Copy code
-pip install -r requirements.txt
-3. Configure Environment Variables
-Create a .env file in the root directory with the following:
+NovaSynth Chatbot is an intelligent system that combines **Retrieval-Augmented Generation (RAG)** and email functionality to provide seamless access to company details. With advanced technologies like **FastAPI**, **Pinecone**, and **OpenAI**, this chatbot delivers instant responses and can send the company's profile via email upon request.
 
-env
-Copy code
-OPENAI_API_KEY=your_openai_api_key
-PINECONE_API_KEY=your_pinecone_api_key
-PINECONE_ENV=your_pinecone_environment
-SENDER_EMAIL=your_email@example.com
-SENDER_PASSWORD=your_email_password
-4. Prepare Data
-Add the company profile or other knowledge base documents in the Data/ directory.
-Example: Save the company profile as Data/company.txt.
-5. Run the Application
-bash
-Copy code
-uvicorn main:app --host 0.0.0.0 --port 8000
-6. Access the Chatbot
-WebSocket Endpoint: ws://localhost:8000/chat
-REST Endpoint (for testing): GET http://localhost:8000/
-🛠 Architecture Overview
-Core Components
-FastAPI Server
+---
 
-Handles REST and WebSocket communication.
-Integrates user input processing and response generation.
-Retrieval-Augmented Generation (RAG)
+## **📋 Features**
 
-Vector Store (Pinecone): Indexes and retrieves documents.
-LLM (OpenAI GPT): Generates context-aware and relevant responses.
-Email Sending Module
+- 🔍 **Smart Document Retrieval**: Fetches precise information using RAG.
+- ✉️ **Email Functionality**: Sends company profiles as email attachments on demand.
+- ⏱ **Real-Time Communication**: WebSocket-based instant interaction.
+- ⚙️ **Modular and Scalable Design**: Independent components ensure easy maintenance.
 
-Uses Python's smtplib for email functionality.
-Sends company profiles as email attachments.
-Middleware
+---
 
-CORS Middleware: Enables cross-origin requests.
-Workflow
-User Interaction
-Receives input via WebSocket.
-Processing
-Checks for email requests and retrieves relevant documents.
-Prompts users for email if not provided.
-Response Generation
-Uses RAG to fetch relevant details and generate a GPT-based response.
-Email Delivery
-Sends company profiles as attachments if requested.
-📌 Key Design Decisions
-RAG Implementation
+## **🚀 Quick Setup Guide**
 
-Focused Retrieval: Ensures concise responses by retrieving contextually relevant knowledge.
-Chat Continuity: Maintains chat history for better contextual responses.
-Email Workflow
+### **Prerequisites**
 
-Proactive Requests: Explicitly prompts users for an email if missing.
-Validation: Ensures file attachment exists before sending.
-Modular Components
+Make sure you have the following ready:
+- **Python**: Version 3.8 or higher.
+- **Pinecone Account**: For vector database.
+- **OpenAI API Key**: For LLM capabilities.
+- **SMTP Email Account**: For sending emails (e.g., Gmail).
 
-Email sending and RAG processes are designed independently for better scalability.
-⚠ Known Limitations
-Basic Email Validation
+---
 
-Uses regex for validation; unreachable or invalid emails are not flagged.
-Limited Scalability
+### **Step-by-Step Instructions**
 
-Chat history is stored in memory during a session; persistent storage like a database is needed for scaling.
-Single File Support
+1. **Clone the Repository**  
+   ```bash
+   git clone https://github.com/M-A-K-K/Chatbot-with-gmail-func.git
+   cd Chatbot-with-gmail-func
+   ```
 
-Currently supports a single profile file for email attachment.
-Error Handling
+2. **Install Dependencies**  
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-Limited handling of runtime issues (e.g., email server or vector store outages).
-🌟 Future Improvements
-Enhanced Email Validation
+3. **Set Up Environment Variables**  
+   Create a `.env` file in the root directory with the following content:
+   ```env
+   OPENAI_API_KEY=your_openai_api_key
+   PINECONE_API_KEY=your_pinecone_api_key
+   PINECONE_ENV=your_pinecone_environment
+   SENDER_EMAIL=your_email@example.com
+   SENDER_PASSWORD=your_email_password
+   ```
 
-Add mechanisms to verify email validity and deliverability.
-Persistent Chat History
+4. **Prepare Data**  
+   - Add the company profile or knowledge base documents to the `Data/` directory.
+   - Example: Save the profile as `Data/company.txt`.
 
-Use a database to store and analyze user interactions.
-Improved RAG
+5. **Run the Application**  
+   ```bash
+   uvicorn main:app --host 0.0.0.0 --port 8000
+   ```
 
-Expand to support multi-document indexing and hierarchical retrieval.
-User Authentication
+6. **Access the Chatbot**  
+   - **WebSocket**: `ws://localhost:8000/chat`  
+   - **REST Endpoint**: `http://localhost:8000/` (for testing).
 
-Add login and authentication for secure and personalized responses.
-User-Friendly Interface
+---
 
-Build a front-end for better interaction.
-Asynchronous Email Handling
+## **📐 Architecture Overview**
 
-Implement background email-sending for improved responsiveness.
-📖 About Retrieval-Augmented Generation (RAG)
-RAG enhances chatbot responses by combining document retrieval with generative AI, ensuring contextually relevant and accurate information.
+### **Core Components**
 
-How It Works
-Document Embedding: Knowledge base files are converted to vector embeddings using OpenAI models.
-Vector Store: Embeddings are stored in Pinecone for similarity search.
-Query Matching: User input is matched against stored vectors to retrieve top documents.
-Response Generation: GPT generates a cohesive response using the retrieved context.
-💡 Get Started Today!
-Clone the repository, follow the setup instructions, and experience the power of intelligent, RAG-enabled chat with email integration.
+| Component             | Functionality                                                                 |
+|------------------------|------------------------------------------------------------------------------|
+| **FastAPI Server**     | Manages WebSocket and REST communication.                                   |
+| **RAG System**         | Combines document retrieval and LLM response generation.                   |
+| **Email Module**       | Sends company profiles as email attachments using SMTP.                    |
+| **Middleware**         | CORS middleware enables cross-origin requests.                             |
 
+---
+
+### **System Workflow**
+
+1. **User Interaction**: Input queries via WebSocket.
+2. **Processing**:
+   - For email requests: Prompts user for email if not provided.
+   - For other queries: Retrieves relevant details from the knowledge base.
+3. **Response Generation**: Uses RAG for context-aware, concise responses.
+4. **Email Delivery**: Sends the company profile as an email attachment when requested.
+
+---
+
+## **🧩 Key Design Highlights**
+
+- **RAG Implementation**:
+  - Retrieves top documents from Pinecone based on user queries.
+  - Uses OpenAI's GPT to generate context-aware responses.
+
+- **Email Integration**:
+  - Validates the presence of email and file attachment before sending.
+  - Prompts user explicitly if an email address is missing.
+
+- **Modular Design**:
+  - Independent components for easy scaling and debugging.
+
+---
+
+## **⚠ Known Limitations**
+
+- **Basic Email Validation**:  
+  - Uses regex to validate email format but doesn’t verify email deliverability.
+
+- **Limited Scalability**:  
+  - Chat history is stored in memory; requires a database for larger-scale use.
+
+- **Single File Support**:  
+  - Currently limited to a single profile file for email attachment.
+
+- **Error Handling**:  
+  - Limited handling for issues like server or email delivery failures.
+
+---
+
+## **✨ Future Improvements**
+
+- **Advanced Email Validation**:  
+  - Add mechanisms to verify email deliverability.
+
+- **Persistent Chat History**:  
+  - Use a database to store user interactions for analytics and better UX.
+
+- **Expanded Knowledge Base**:  
+  - Support for multi-document indexing and advanced retrieval.
+
+- **User Authentication**:  
+  - Add login systems for secure and personalized responses.
+
+- **Improved Interface**:  
+  - Develop a front-end for intuitive user interaction.
+
+- **Asynchronous Email Handling**:  
+  - Enable background email sending for better responsiveness.
+
+---
+
+## **🔬 How RAG Works**
+
+**Retrieval-Augmented Generation (RAG)** combines document retrieval with generative AI to deliver precise, context-driven responses.  
+
+1. **Document Embedding**: Transforms knowledge base into vector embeddings.  
+2. **Vector Search**: Finds the most relevant documents using Pinecone.  
+3. **Generative Response**: GPT generates a response based on the retrieved context.
+
+---
+
+## **📞 Support**
+
+For any issues or inquiries, please reach out via email: [m.abdulkabirkhan@gmail.com](mailto:m.abdulkabirkhan@gmail.com).
+
+---
+
+## **📜 License**
+
+This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
