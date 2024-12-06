@@ -8,30 +8,26 @@ from dotenv import load_dotenv
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_pinecone import PineconeVectorStore
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from langchain.chains import create_retrieval_chain
+from langchain.agents import AgentExecutor, create_react_agent
 from langchain.prompts import ChatPromptTemplate
 import smtplib
 from langchain_core.prompts import PromptTemplate
-from pydantic import BaseModel
 from typing import Any
 from typing import ClassVar
 from pydantic import Field
-from langchain.agents import Tool, initialize_agent
+from langchain.agents import create_react_agent
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from langchain_core.tools import BaseTool
-from langchain.chains import ConversationChain
 from email import encoders
-from pydantic import PrivateAttr
-
 from langchain.memory import ConversationBufferMemory
+from langchain.chains import create_retrieval_chain
 
-# Set up conversation memory
 memory = ConversationBufferMemory()
 
 load_dotenv()
-
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 app = FastAPI()
 chat_history = []
 app.add_middleware(
@@ -57,7 +53,6 @@ def send_email_with_attachment(receiver_email: str, file_path: str):
         sender_email = os.getenv("SENDER_EMAIL")
         sender_password = os.getenv("SENDER_PASSWORD")
         
-        # Predefined message
         message = """
         Dear Recipient,
 
@@ -74,7 +69,6 @@ def send_email_with_attachment(receiver_email: str, file_path: str):
         msg['Subject'] = "NovaSynth Tech Solutions Company Profile"
         msg.attach(MIMEText(message, 'plain'))
 
-        # Attach file
         if os.path.exists(file_path):
             with open(file_path, "rb") as attachment:
                 part = MIMEBase('application', 'octet-stream')
@@ -88,7 +82,6 @@ def send_email_with_attachment(receiver_email: str, file_path: str):
         else:
             return f"Error: File not found at {file_path}"
 
-        # Send email
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
         server.login(sender_email, sender_password)
@@ -98,9 +91,8 @@ def send_email_with_attachment(receiver_email: str, file_path: str):
     except Exception as e:
         return f"Error Sending Email: {str(e)}"
 
-# Updated EmailSenderTool
 class EmailSenderTool(BaseTool):
-    name: str = "Email Sender Tool"
+    name: str = "EmailSenderTool"
     description: str = """
     Automatically sends the company profile to the provided email address.
     Use this tool when you need to send the company profile to a specific email address.
@@ -137,190 +129,152 @@ class EmailSenderTool(BaseTool):
     def _arun(self, inputs: dict):
         raise NotImplementedError("This tool does not support async operations.")
 
-
-
 class PineconeQueryTool(BaseTool):
-    name: str = "Pinecone Query Tool"
+    name: str = "PineconeQueryTool"
     description: str = """
-    Use this tool when a user asks about NovaSynth Tech Solutions and for general greetings. 
-    Provide short, concise and accurate answers based on the provided context.
-    If user asks do greetings, also respond to them.
-    - Provide  exact information what is user is asking.
-    - Do not provide xtra information.
-    - If the user greets you (e.g., "Hello", "Hi"), respond warmly without invoking any tools.  
-    - Example: "Hello! How can I assist you today?"
-    For example:- If user asks about the company's mission, provide the mission statement.
-    - If user asks about the company's history, provide the history.
-    - If user asks about the company's services, provide the services.
-    - If user asks about the company's team, provide the team members.
-    - If user asks about the company's contact information, provide the contact information.
-    - If user asks about the company's location, provide the location.
-    - If user asks about the company's website, provide the website.
-    - If user asks about the company's social media, provide the social media.
-    - If user asks about the company's blog, provide the blog.
-    - If user asks about the company's events, provide the events.
-    - If user asks about the company's awards, provide the awards.
-    - If user asks about the company's partners, provide the partners.
-    - If user asks about the company's clients, provide the clients.
-    - If user asks about the company's press releases, provide the press releases.
-    - If user asks about the company's location, provide the location.
+     Use this tool when a user asks about NovaSynth Tech Solutions or any information related to its data, products, services, achievements, leadership, or other details provided in the context. 
+    - Provide precise, short and concise responses directly addressing the user's query. 
+    - Avoid adding any extra or unrelated information.
+    - Ensure that all answers are strictly based on the given company data.
+    - Invalid or incomplete responses will be penalized.
     """
 
     def _run(self, query: str):
         try:
-            # Initialize embedding model
             embedding_model = OpenAIEmbeddings(
-                api_key="Uq6en", 
+                api_key=OPENAI_API_KEY,
                 model="text-embedding-3-small"
             )
-
-            # Initialize vectorstore
             vectorstore = PineconeVectorStore(index_name="company-bot", embedding=embedding_model)
-
-            # Retrieve relevant documents
-            retriever = vectorstore.as_retriever(top_k=3)
-            retrieved_docs = retriever.get_relevant_documents(query)
-
-            # Extract context from retrieved documents
-            context = "\n".join([doc.page_content for doc in retrieved_docs])
-
-            # Initialize LLM
+    
             llm = ChatOpenAI(
-                model_name="gpt-4o-mini",
-                temperature=0.1,
-                openai_api_key="6en"
+                model_name="gpt-4o",
+                temperature=0.1, 
+                openai_api_key=OPENAI_API_KEY
             )
-
-            # Define QA Prompt Template
             qa_prompt = ChatPromptTemplate.from_template(
-                """You are an intelligent assistant specializing in providing accurate and concise information about NovaSynth Tech Solutions.
-                
-                **Instructions:**  
-                - Always provide information that user wants.
-                - Do not provide extra information.
-                - Always respond based on the provided context below.  
-                - Provide clear, actionable answers in no more than 3 sentences.  
-                - If the user expresses interest, offer to send the company profile via email.  
-                - If the user greets you (e.g., "Hello", "Hi"), respond warmly without invoking any tools.  
-                  - Example: "Hello! How can I assist you today?"
-                **Context:**  
-                {context}  
+    """
+    You are an intelligent assistant providing concise and well-formatted information about NovaSynth Tech Solutions.
+    - Provide answers in short bullet points.
+    - If user asks something out of context, politely inform them that you can only provide information based on the provided data.
+    - Focus on short answers and avoid unnecessary details.
+    - Format the response for readability, using clear headers and subheaders.
+    Context: {context}
+    User Query: {input}
+    """
+)
 
-                **Rules:**  
-                1. Only respond using information from the context.  
-                2. If no relevant information is found, inform the user politely and offer to follow up via email if necessary.  
-                3. Avoid providing speculative or unrelated answers.  
-
-                User Input: {input}  
-                """
-            )
-
-            # Create a chain to handle QA
-            question_answer_chain = create_stuff_documents_chain(llm, qa_prompt)
-            rag_chain = create_retrieval_chain(vectorstore.as_retriever(top_k=3), question_answer_chain)
-
+            chain = create_stuff_documents_chain(llm, qa_prompt)
+            rag_chain = create_retrieval_chain(vectorstore.as_retriever(top_k=3), chain)
             ai_respo = rag_chain.invoke({
-                "input": query,
-                "context": context,
-                "chat_history": chat_history
-            })
+                    "input": query,
+                    "context": qa_prompt,
+                    "chat_history": chat_history
+                })
             response_text = ai_respo["answer"]
             return response_text
-
         except Exception as e:
             return f"Error querying Pinecone: {str(e)}"
 
     def _arun(self, query: str):
-        # This method remains unimplemented for synchronous-only usage
         raise NotImplementedError("This tool does not support async operations.")
 
 
-
-# WebSocket route with Pinecone tool
 @app.websocket("/chat")
 async def websocket_chat(websocket: WebSocket):
     await websocket.accept()
 
-    # Create LLM and tools
-    llm = ChatOpenAI(model_name="gpt-4o-mini", temperature=1)
+    llm = ChatOpenAI(model_name="gpt-4o", temperature=0.5)
     email_tool = EmailSenderTool(file_path="Data/company.txt")
+    Pinecone_tool = PineconeQueryTool()
+    tools = [email_tool, Pinecone_tool]
+    tool_names = [tool.name for tool in tools]
 
-    # Use PineconeQueryTool with hardcoded API key and index name
-    pinecone_tool = PineconeQueryTool()
-
-    tools = [email_tool, pinecone_tool]
-
-    # Define the agent prompt
+    print("Available Tool Names:", tool_names)
     prompt_template = """
-    You are an intelligent and conversational assistant for NovaSynth Tech Solutions.  
-    You should only invoke tools when strictly required. For all other inputs, respond naturally without invoking tools.  
+You are an intelligent assistant with access to the following tools:
+{tools}
+- Strictly always respond in a short manner.
+-If the input does not requires a tool, do directly.
+When a user provides input:
+- Analyze the input to determine if it requires a tool (e.g., PineconeQueryTool or EmailSenderTool).
+-If the input does not requires a tool, deny the request.
+- If the user requests information about the company, retrieve the data using PineconeQueryTool. 
+- If this is the first time the user is asking about the company, after providing the answer, ask if they would like more detailed information sent via email.
+- If the user agrees, collect their email address and use EmailSenderTool to send the company profile.
+- If the user provides an email address directly, send the detailed company profile immediately using EmailSenderTool.
 
-    **Rules for Behavior:**
-    1. **Greeting Handling**:  
-    - If the user greets you (e.g., "Hello", "Hi"), respond warmly without invoking any tools.  
-    - Example: "Hello! How can I assist you today?"
-    2. **General Queries**:  
-    - Answer general inquiries directly without tools if the answer is simple or self-contained.  
-    - Example: If the user asks, "What does NovaSynth do?", respond with a brief explanation:  
-        "NovaSynth Tech Solutions specializes in innovative technology solutions and services."
-    3. **Tool Usage**:  
-    - Use tools only when strictly required to retrieve or process specific information.  
-    - Example: Sending the company profile or retrieving data from Pinecone.
-    4. **Fallback Handling**:  
-    - If you encounter errors (e.g., invalid tool format), respond directly to the user's query without retrying the tool.  
-    - Example: "I'm sorry, I couldn't process that. Can I assist you with something else?"
+**Strictly follow this reasoning process**:
+Thought: Describe your thought process.
+Action: Specify the tool you are using (e.g., PineconeQueryTool or EmailSenderTool).
+Action Input: Provide the necessary input for the tool.
+Observation: Record the tool's response.
+(Repeat Thought/Action/Action Input/Observation as needed.)
+Final Answer: Provide the final response to the user, ensuring it aligns with the interaction rules above.
 
-    **Important Notes:**  
-    - Do not invoke tools for greetings or casual conversations.  
-    - Avoid retrying failed tool actions; respond naturally instead.  
+Chat History: {chat_history}
+User Input: {input} 
+Tool Names: {tool_names}
+Tools: {tools}
+Agent Scratchpad: {agent_scratchpad}
+"""
 
-    **Examples of Proper Behavior**:
-    - User: "Hi"  
-    Assistant: "Hello! How can I assist you today?"
-    - User: "Send me the company profile."  
-    Assistant: "Sure! Please share your email address, and I'll send it to you."  
-    (Uses the EmailSenderTool only after email address is provided.)
-    - User: "Tell me about NovaSynth Tech Solutions."  
-    Assistant: "NovaSynth specializes in providing innovative technology solutions to businesses worldwide."
+# When a user provides input:
+# - Analyze the input to determine if it requires a tool (PineconeQueryTool or EmailSenderTool).
+# - If the user requests information about the company, retrieve the data using PineconeQueryTool. 
+# - If this is the first time the user is asking about the company, after providing the answer, ask if they would like more detailed information sent via email.
+# - If the user agrees, collect their email address and use EmailSenderTool to send the company profile.
+# - If the user provides an email address directly, send the detailed company profile immediately using EmailSenderTool.
 
-    Chat History: {chat_history}  
-    User Input: {input}
-    """
-
-    PROMPT = PromptTemplate(template=prompt_template, input_variables=["tools","chat_history", "input"])
-
-    # Initialize the agent with session-specific memory
-    agent = initialize_agent(
-        agent_type="chat-conversational-react-description",
-        tools=tools,
-        llm=llm,
-        verbose=True,
-        memory=None,  # Define memory if needed
-        prompt=PROMPT,
-        handle_parsing_errors=True 
+    PROMPT = PromptTemplate(
+        template=prompt_template,
+        input_variables=["tools", "tool_names", "chat_history", "input", "agent_scratchpad"]
     )
 
+    agent = create_react_agent(
+        tools=[email_tool, Pinecone_tool],
+        llm=llm,
+        prompt=PROMPT
+    )
+    agent_executor = AgentExecutor.from_agent_and_tools(
+        agent=agent,
+        tools=[email_tool, Pinecone_tool],
+        verbose=True,
+        handle_parsing_errors=True,
+        max_iterations= 10,
+    )
+
+    chat_history = []  
     try:
         while True:
-            # Receive user input
             user_message = await websocket.receive_text()
 
             if not user_message:
                 await websocket.send_text("Error: No message received. Please send a message.")
                 continue
 
-            # Add user message to the chat history
             chat_history.append({"role": "user", "message": user_message})
 
-            # Get the agent's response (it will automatically choose the correct tool based on the input)
             try:
-                response = agent.run(user_message)
+                input_data = {
+                    "input": user_message,
+                    "chat_history": json.dumps(chat_history),
+                    "tools": [tool.__class__.__name__ for tool in tools],
+                    "tool_names": [tool.name for tool in tools], 
+                    "agent_scratchpad": "",
+                }
 
-                # Add assistant's response to the chat history
-                chat_history.append({"role": "assistant", "message": response})
 
-                # Send the response back to the user
-                await websocket.send_text(response)
+                response = agent_executor.invoke(input_data)
+
+                if isinstance(response, dict):  
+                    output_value = response.get("output", "No output found")
+                else:
+                    output_value = "Invalid response format"
+
+                chat_history.append({"role": "assistant", "message": output_value})
+
+                await websocket.send_text(output_value)
 
             except Exception as e:
                 error_message = f"Error during processing: {str(e)}"
@@ -334,20 +288,9 @@ async def websocket_chat(websocket: WebSocket):
         if not os.path.exists(history_folder):
             os.makedirs(history_folder)
 
-        # Save session memory history to a file for persistence
         with open(f"{history_folder}/chat_history_{session_id}.json", "w") as history_file:
             json.dump(chat_history, history_file, indent=4)
-
-
 
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
-
-
-
-
-
-
-
